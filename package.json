@@ -1,0 +1,57 @@
+{
+  "name": "@otl-core/cli",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "OTL CMS CLI -- scaffold and manage engine components",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "bin": {
+    "otl-cli": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+    "prepublishOnly": "npm run rebuild",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/otl-core/cli.git"
+  },
+  "keywords": [
+    "otl",
+    "cms",
+    "cli",
+    "codegen"
+  ],
+  "author": "OTL Core",
+  "license": "PolyForm-Shield-1.0.0",
+  "dependencies": {
+    "commander": "^13.1.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@vitest/ui": "^4.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.0"
+  }
+}
