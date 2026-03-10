@@ -8,6 +8,7 @@
 
 import { Command } from "commander";
 import { registerAddCommands } from "./commands/add";
+import { registerCustomizeCommands } from "./commands/customize";
 import { registerInitCommand } from "./commands/init";
 import { registerListCommands } from "./commands/list";
 // import { registerSetupCommands } from "./commands/setup";
@@ -21,6 +22,7 @@ program
 
 // Register command groups
 registerAddCommands(program);
+registerCustomizeCommands(program);
 registerListCommands(program);
 registerInitCommand(program);
 // registerSetupCommands(program);
