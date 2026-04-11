@@ -60,8 +60,6 @@ const SIMPLE_TYPE_MAP: Record<string, string> = {
   "form-selector": "string",
   "form-page": "string",
   json: "Record<string, unknown>",
-  object: "Record<string, unknown>",
-  array: "unknown[]",
   "container-behavior": '"boxed" | "edged" | "ignore"',
 };
 
@@ -112,6 +110,16 @@ export function resolveFieldType(
     case "localized-text":
       imports.LocalizedString = true;
       return "LocalizedString";
+
+    // Array -- will be handled by the interface generator to produce a nested
+    // item interface when sub-fields are present.
+    case "array":
+      return "__ARRAY__";
+
+    // Object -- will be handled by the interface generator to produce a nested
+    // interface when properties are present.
+    case "object":
+      return "__OBJECT__";
 
     // Group -- will be handled by the interface generator to produce a nested
     // interface. At the type level we return the interface name.
@@ -173,6 +181,52 @@ function buildInterfaceLines(
   for (const field of fields) {
     const camelId = fieldIdToCamel(field.id);
     let tsType = resolveFieldType(field, imports);
+
+    // Handle object fields -- generate a nested interface from properties
+    if (
+      tsType === "__OBJECT__" &&
+      field.properties &&
+      field.properties.length > 0
+    ) {
+      const nestedName = parentName + kebabToPascal(field.id);
+      const nestedLines = buildInterfaceLines(
+        nestedName,
+        field.properties,
+        imports,
+        extraInterfaces,
+      );
+      const nestedDecl = [
+        `interface ${nestedName} {`,
+        ...nestedLines,
+        "}",
+      ].join("\n");
+      extraInterfaces.push(nestedDecl);
+      tsType = nestedName;
+    } else if (tsType === "__OBJECT__") {
+      // Object with no properties
+      tsType = "Record<string, unknown>";
+    }
+
+    // Handle array fields -- generate a nested item interface
+    if (tsType === "__ARRAY__" && field.fields && field.fields.length > 0) {
+      const nestedName = parentName + kebabToPascal(field.id) + "Item";
+      const nestedLines = buildInterfaceLines(
+        nestedName,
+        field.fields,
+        imports,
+        extraInterfaces,
+      );
+      const nestedDecl = [
+        `interface ${nestedName} {`,
+        ...nestedLines,
+        "}",
+      ].join("\n");
+      extraInterfaces.push(nestedDecl);
+      tsType = `${nestedName}[]`;
+    } else if (tsType === "__ARRAY__") {
+      // Array with no sub-fields
+      tsType = "unknown[]";
+    }
 
     // Handle group fields -- generate a nested interface
     if (tsType === "__GROUP__" && field.fields && field.fields.length > 0) {

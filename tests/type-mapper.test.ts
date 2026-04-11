@@ -31,8 +31,6 @@ describe("type-mapper", () => {
       ["form-selector", "string"],
       ["form-page", "string"],
       ["json", "Record<string, unknown>"],
-      ["object", "Record<string, unknown>"],
-      ["array", "unknown[]"],
       ["container-behavior", '"boxed" | "edged" | "ignore"'],
     ];
 
@@ -164,6 +162,28 @@ describe("type-mapper", () => {
     });
   });
 
+  describe("resolveFieldType array", () => {
+    it('returns "__ARRAY__" sentinel for array type', () => {
+      const imports = createEmptyImports();
+      const result = resolveFieldType(
+        field({ id: "items", type: "array" }),
+        imports,
+      );
+      expect(result).toBe("__ARRAY__");
+    });
+  });
+
+  describe("resolveFieldType object", () => {
+    it('returns "__OBJECT__" sentinel for object type', () => {
+      const imports = createEmptyImports();
+      const result = resolveFieldType(
+        field({ id: "meta", type: "object" }),
+        imports,
+      );
+      expect(result).toBe("__OBJECT__");
+    });
+  });
+
   describe("buildTypeImportLine", () => {
     it("returns null when no imports are needed", () => {
       const imports = createEmptyImports();
@@ -229,6 +249,32 @@ describe("type-mapper", () => {
       expect(result.declarations).toContain("hero?: PageConfigHero;");
     });
 
+    it("generates nested interface for object fields with properties", () => {
+      const fields: SchemaField[] = [
+        field({
+          id: "cta",
+          type: "object",
+          properties: [
+            field({ id: "label", type: "text" }),
+            field({ id: "url", type: "url" }),
+            field({ id: "open-new-tab", type: "boolean" }),
+          ],
+        }),
+      ];
+      const result = generateInterface("CardConfig", fields);
+      expect(result.declarations).toContain("interface CardConfigCta {");
+      expect(result.declarations).toContain("label?: string;");
+      expect(result.declarations).toContain("url?: string;");
+      expect(result.declarations).toContain("openNewTab?: boolean;");
+      expect(result.declarations).toContain("cta?: CardConfigCta;");
+    });
+
+    it("falls back to Record for object with no properties", () => {
+      const fields: SchemaField[] = [field({ id: "meta", type: "object" })];
+      const result = generateInterface("TestConfig", fields);
+      expect(result.declarations).toContain("meta?: Record<string, unknown>;");
+    });
+
     it("falls back to Record for group with no sub-fields", () => {
       const fields: SchemaField[] = [
         field({ id: "meta", type: "group", fields: [] }),
@@ -253,6 +299,47 @@ describe("type-mapper", () => {
       const fields: SchemaField[] = [field({ id: "plan_name", type: "text" })];
       const result = generateInterface("TestConfig", fields);
       expect(result.declarations).toContain("planName?: string;");
+    });
+
+    it("generates nested item interface for array fields with sub-fields", () => {
+      const fields: SchemaField[] = [
+        field({
+          id: "badges",
+          type: "array",
+          fields: [
+            field({ id: "badge-icon", type: "select" }),
+            field({ id: "badge-text", type: "text" }),
+            field({ id: "badge-coming-soon", type: "boolean" }),
+          ],
+        }),
+      ];
+      const result = generateInterface("HeroConfig", fields);
+      expect(result.declarations).toContain("interface HeroConfigBadgesItem {");
+      expect(result.declarations).toContain("badgeIcon?: string;");
+      expect(result.declarations).toContain("badgeText?: string;");
+      expect(result.declarations).toContain("badgeComingSoon?: boolean;");
+      expect(result.declarations).toContain("badges?: HeroConfigBadgesItem[];");
+    });
+
+    it("falls back to unknown[] for array with no sub-fields", () => {
+      const fields: SchemaField[] = [
+        field({ id: "tags", type: "array", fields: [] }),
+      ];
+      const result = generateInterface("TestConfig", fields);
+      expect(result.declarations).toContain("tags?: unknown[];");
+    });
+
+    it("tracks imports from array item sub-fields", () => {
+      const fields: SchemaField[] = [
+        field({
+          id: "items",
+          type: "array",
+          fields: [field({ id: "image", type: "image" })],
+        }),
+      ];
+      const result = generateInterface("TestConfig", fields);
+      expect(result.imports.MediaReference).toBe(true);
+      expect(result.declarations).toContain("image?: MediaReference;");
     });
   });
 });
