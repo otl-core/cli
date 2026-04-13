@@ -89,10 +89,9 @@ export function resolveFieldType(
       imports.ColorReference = true;
       return "ColorReference";
 
-    // Image / media
+    // Image / media — stored as a URL string in section configs
     case "image":
-      imports.MediaReference = true;
-      return "MediaReference";
+      return "string";
 
     // Responsive value types
     case "spacing":

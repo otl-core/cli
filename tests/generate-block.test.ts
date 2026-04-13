@@ -36,10 +36,11 @@ describe("generateBlockComponent", () => {
     ];
     const output = generateBlockComponent("hero", fields);
 
-    // Should have one combined import with BlockComponentProps + ColorReference + MediaReference
+    // Should have one combined import with BlockComponentProps + ColorReference
     expect(output).toContain("BlockComponentProps");
     expect(output).toContain("ColorReference");
-    expect(output).toContain("MediaReference");
+    // image maps to string, so no MediaReference import
+    expect(output).not.toContain("MediaReference");
     // Should be a single import line from @otl-core/cms-types
     const importLines = output
       .split("\n")

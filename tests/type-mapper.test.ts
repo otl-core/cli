@@ -98,14 +98,14 @@ describe("type-mapper", () => {
       expect(imports.ColorReference).toBe(true);
     });
 
-    it("sets MediaReference for image", () => {
+    it("returns string for image", () => {
       const imports = createEmptyImports();
       const result = resolveFieldType(
         field({ id: "img", type: "image" }),
         imports,
       );
-      expect(result).toBe("MediaReference");
-      expect(imports.MediaReference).toBe(true);
+      expect(result).toBe("string");
+      expect(imports.MediaReference).toBe(false);
     });
 
     it("sets ResponsiveValue for spacing", () => {
@@ -338,8 +338,8 @@ describe("type-mapper", () => {
         }),
       ];
       const result = generateInterface("TestConfig", fields);
-      expect(result.imports.MediaReference).toBe(true);
-      expect(result.declarations).toContain("image?: MediaReference;");
+      expect(result.imports.MediaReference).toBe(false);
+      expect(result.declarations).toContain("image?: string;");
     });
   });
 });
