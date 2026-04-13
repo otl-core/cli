@@ -265,7 +265,7 @@ describe("type-mapper", () => {
       expect(result.declarations).toContain("interface CardConfigCta {");
       expect(result.declarations).toContain("label?: string;");
       expect(result.declarations).toContain("url?: string;");
-      expect(result.declarations).toContain("openNewTab?: boolean;");
+      expect(result.declarations).toContain('"open-new-tab"?: boolean;');
       expect(result.declarations).toContain("cta?: CardConfigCta;");
     });
 
@@ -295,10 +295,10 @@ describe("type-mapper", () => {
       expect(result.imports.ColorReference).toBe(true);
     });
 
-    it("converts field IDs to camelCase", () => {
+    it("preserves original field IDs", () => {
       const fields: SchemaField[] = [field({ id: "plan_name", type: "text" })];
       const result = generateInterface("TestConfig", fields);
-      expect(result.declarations).toContain("planName?: string;");
+      expect(result.declarations).toContain("plan_name?: string;");
     });
 
     it("generates nested item interface for array fields with sub-fields", () => {
@@ -315,9 +315,9 @@ describe("type-mapper", () => {
       ];
       const result = generateInterface("HeroConfig", fields);
       expect(result.declarations).toContain("interface HeroConfigBadgesItem {");
-      expect(result.declarations).toContain("badgeIcon?: string;");
-      expect(result.declarations).toContain("badgeText?: string;");
-      expect(result.declarations).toContain("badgeComingSoon?: boolean;");
+      expect(result.declarations).toContain('"badge-icon"?: string;');
+      expect(result.declarations).toContain('"badge-text"?: string;');
+      expect(result.declarations).toContain('"badge-coming-soon"?: boolean;');
       expect(result.declarations).toContain("badges?: HeroConfigBadgesItem[];");
     });
 
