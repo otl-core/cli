@@ -41,12 +41,18 @@ export function generateSectionComponent(
   }
 
   // Build the config destructuring for the component body
-  const fieldIds = fields
-    .map((f) => fieldIdToCamel(f.id))
-    .filter((id) => id.length > 0);
+  const fieldEntries = fields
+    .map((f) => f.id)
+    .filter((id) => id.length > 0)
+    .map((id) => {
+      const needsRename = /[^a-zA-Z0-9_$]/.test(id);
+      return needsRename ? `"${id}": ${fieldIdToCamel(id)}` : id;
+    });
 
   const destructuring =
-    fieldIds.length > 0 ? `  const { ${fieldIds.join(", ")} } = config;\n` : "";
+    fieldEntries.length > 0
+      ? `  const { ${fieldEntries.join(", ")} } = config;\n`
+      : "";
 
   // Assemble the file
   const parts: string[] = [

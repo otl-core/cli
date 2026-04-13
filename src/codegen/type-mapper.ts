@@ -6,7 +6,7 @@
  */
 
 import type { SchemaField } from "../types";
-import { fieldIdToCamel, kebabToPascal } from "../utils/naming";
+import { kebabToPascal } from "../utils/naming";
 
 export interface TypeImports {
   ColorReference: boolean;
@@ -179,7 +179,8 @@ function buildInterfaceLines(
   const lines: string[] = [];
 
   for (const field of fields) {
-    const camelId = fieldIdToCamel(field.id);
+    const needsQuotes = /[^a-zA-Z0-9_$]/.test(field.id);
+    const propKey = needsQuotes ? `"${field.id}"` : field.id;
     let tsType = resolveFieldType(field, imports);
 
     // Handle object fields -- generate a nested interface from properties
@@ -253,7 +254,7 @@ function buildInterfaceLines(
     if (field.description) {
       lines.push(`  /** ${field.description} */`);
     }
-    lines.push(`  ${camelId}?: ${tsType};`);
+    lines.push(`  ${propKey}?: ${tsType};`);
   }
 
   return lines;
