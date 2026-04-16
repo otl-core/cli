@@ -30,6 +30,16 @@ async function getLatestRelease(): Promise<string | null> {
   return data.tag_name;
 }
 
+async function getReleaseByTag(tag: string): Promise<string | null> {
+  const res = await fetch(
+    `https://api.github.com/repos/${REPO}/releases/tags/${tag}`,
+    { headers: { Accept: "application/vnd.github.v3+json" } },
+  );
+  if (!res.ok) return null;
+  const data = (await res.json()) as { tag_name: string };
+  return data.tag_name;
+}
+
 async function fetchDiff(from: string, to: string): Promise<string | null> {
   const url = `https://github.com/${REPO}/compare/${from}...${to}.diff`;
   const res = await fetch(url);
@@ -147,7 +157,11 @@ export function registerUpgradeCommand(program: Command): void {
     .command("upgrade")
     .description("Update the engine to the latest stable version")
     .option("--dry-run", "Show what would change without applying")
-    .action(async (opts: { dryRun?: boolean }) => {
+    .option(
+      "-v, --version <version>",
+      "Upgrade to a specific version (e.g. v1.2.0)",
+    )
+    .action(async (opts: { dryRun?: boolean; version?: string }) => {
       try {
         const currentVersion = getCurrentVersion();
         if (!currentVersion) {
@@ -158,12 +172,28 @@ export function registerUpgradeCommand(program: Command): void {
         }
 
         console.log(`Current version: ${currentVersion}`);
-        console.log("Checking for updates...");
 
-        const latest = await getLatestRelease();
-        if (!latest) {
-          console.error("Error: Could not fetch latest release.");
-          process.exit(1);
+        let latest: string | null;
+
+        if (opts.version) {
+          const tag = opts.version.startsWith("v")
+            ? opts.version
+            : `v${opts.version}`;
+          console.log(`Looking up release ${tag}...`);
+          latest = await getReleaseByTag(tag);
+          if (!latest) {
+            console.error(
+              `Error: Release ${tag} not found. Make sure the release exists on GitHub.`,
+            );
+            process.exit(1);
+          }
+        } else {
+          console.log("Checking for updates...");
+          latest = await getLatestRelease();
+          if (!latest) {
+            console.error("Error: Could not fetch latest release.");
+            process.exit(1);
+          }
         }
 
         if (latest === currentVersion) {
@@ -205,7 +235,7 @@ export function registerUpgradeCommand(program: Command): void {
             execSync(`git apply --reject "${tmpDiff}" 2>&1 || true`, {
               cwd: process.cwd(),
               stdio: "inherit",
-              shell: true,
+              shell: process.env.SHELL || "/bin/sh",
             });
             // Clean up .rej files and report
             const rejFiles: string[] = [];

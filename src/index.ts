@@ -14,12 +14,14 @@ import { registerListCommands } from "./commands/list";
 import { registerUpgradeCommand } from "./commands/upgrade";
 // import { registerSetupCommands } from "./commands/setup";
 
+declare const __CLI_VERSION__: string;
+
 const program = new Command();
 
 program
   .name("otl-cli")
   .description("OTL CMS CLI -- scaffold and manage engine components")
-  .version("0.1.0");
+  .version(__CLI_VERSION__);
 
 // Register command groups
 registerAddCommands(program);
